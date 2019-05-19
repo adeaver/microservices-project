@@ -6,11 +6,13 @@ RUN apk add --no-cache curl
 # TODO(adeaver): make this install a specific version
 RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 
-WORKDIR $GOPATH/src/alphavantage-worker
+WORKDIR $GOPATH/src/timeseries-worker
 
 # INSTALL GOLANG DEPENDENCIES
 COPY Gopkg.lock .
 COPY Gopkg.toml .
 RUN dep ensure --vendor-only
+
+COPY . .
 
 CMD ["sh"]

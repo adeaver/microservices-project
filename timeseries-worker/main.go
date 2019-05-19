@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/adeaver/microservices-project/alphavantage"
+	"github.com/adeaver/microservices-project/util/alphavantage"
 )
 
 const API_KEY_ENVIRONMENT_VARIABLE = "ALPHA_VANTAGE_KEY"
