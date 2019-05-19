@@ -28,7 +28,7 @@ func parseResponseCSV(body string) ([]*EquitySnapshot, error) {
 	keys := strings.SplitN(lines[0], ",", -1)
 	var out []*EquitySnapshot
 	for _, data := range lines[1:] {
-		parts := strings.SplitN(data, ", ", -1)
+		parts := strings.SplitN(data, ",", -1)
 		dataMap := make(map[string]string)
 		for i, p := range parts {
 			dataMap[keys[i]] = p
@@ -73,6 +73,7 @@ func getCentsValueForKeyOrNil(key csvKey, dataMap map[string]string) (*int64, er
 	value, ok := dataMap[key.String()]
 	if !ok {
 		fmt.Println(fmt.Sprintf("no value found for key %v", key.String()))
+		fmt.Println(fmt.Sprintf("%+v", dataMap))
 		return nil, nil
 	}
 	float, err := strconv.ParseFloat(value, 64)
