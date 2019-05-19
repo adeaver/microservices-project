@@ -57,7 +57,7 @@ type GetTimeSeriesInput struct {
 	Symbol     string
 }
 
-func (c *alphaVantageClient) GetTimeSeries(input GetTimeSeriesInput) (*string, error) {
+func (c *alphaVantageClient) GetTimeSeries(input GetTimeSeriesInput) ([]*EquitySnapshot, error) {
 	url, err := c.makeURLFromInput(input)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,14 @@ func (c *alphaVantageClient) GetTimeSeries(input GetTimeSeriesInput) (*string, e
 		return nil, err
 	}
 	str := string(bodyBytes)
-	return &str, nil
+	switch input.DataType {
+	case DataTypeCSV:
+		return parseResponseCSV(str)
+	case DataTypeJSON:
+		return nil, fmt.Errorf("json type not implemented")
+	default:
+		return nil, fmt.Errorf("unsupported data type")
+	}
 }
 
 func (c *alphaVantageClient) makeURLFromInput(input GetTimeSeriesInput) (*url.URL, error) {
