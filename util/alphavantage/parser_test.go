@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 )
 
 func makePtr(v int64) *int64 {
@@ -12,7 +13,6 @@ func makePtr(v int64) *int64 {
 
 func testEquality(snapshot, expectedSnapshot EquitySnapshot) string {
 	var errs []string
-	// TODO: add date
 	if *snapshot.OpenPriceCents != *expectedSnapshot.OpenPriceCents {
 		errs = append(errs, fmt.Sprintf("open price is not equal. expected %v, got %v", *expectedSnapshot.OpenPriceCents, *snapshot.OpenPriceCents))
 	}
@@ -28,11 +28,16 @@ func testEquality(snapshot, expectedSnapshot EquitySnapshot) string {
 	if *snapshot.VolumeShares != *expectedSnapshot.VolumeShares {
 		errs = append(errs, fmt.Sprintf("volume shares is not equal. expected %v, got %v", *expectedSnapshot.VolumeShares, *snapshot.VolumeShares))
 	}
+	if snapshot.Time != expectedSnapshot.Time {
+		errs = append(errs, fmt.Sprintf("timestamp is not equal. expected %v, got %v", expectedSnapshot.Time, snapshot.Time))
+	}
 	return strings.Join(errs, ", ")
 }
 
 func TestParseCSV(t *testing.T) {
+	expectedTime := time.Date(2019, 5, 17, 0, 0, 0, 0, time.UTC)
 	expectedSnapshot := EquitySnapshot{
+		Time:            expectedTime,
 		OpenPriceCents:  makePtr(12831),
 		HighPriceCents:  makePtr(13046),
 		LowPriceCents:   makePtr(12792),
@@ -44,7 +49,7 @@ func TestParseCSV(t *testing.T) {
 2019-05-16,126.7500,129.3800,126.4600,128.9300,30112216
 2019-05-15,124.2600,126.7100,123.7000,126.0200,24722708
 2019-05-14,123.8700,125.8800,123.7000,124.7300,25266315`
-	output, err := parseResponseCSV(response)
+	output, err := parseResponseCSV(response, FunctionTypeDaily)
 	if err != nil {
 		t.Errorf("Expecting nil err, got %v", err)
 	}
@@ -57,7 +62,9 @@ func TestParseCSV(t *testing.T) {
 }
 
 func TestParseCSVChangeOrder(t *testing.T) {
+	expectedTime := time.Date(2019, 5, 17, 0, 0, 0, 0, time.UTC)
 	expectedSnapshot := EquitySnapshot{
+		Time:            expectedTime,
 		OpenPriceCents:  makePtr(12807),
 		HighPriceCents:  makePtr(12831),
 		LowPriceCents:   makePtr(13046),
@@ -69,7 +76,7 @@ func TestParseCSVChangeOrder(t *testing.T) {
 2019-05-16,126.7500,129.3800,126.4600,128.9300,30112216
 2019-05-15,124.2600,126.7100,123.7000,126.0200,24722708
 2019-05-14,123.8700,125.8800,123.7000,124.7300,25266315`
-	output, err := parseResponseCSV(response)
+	output, err := parseResponseCSV(response, FunctionTypeDaily)
 	if err != nil {
 		t.Errorf("Expecting nil err, got %v", err)
 	}

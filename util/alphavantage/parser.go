@@ -23,7 +23,7 @@ func (k *csvKey) String() string {
 	return string(*k)
 }
 
-func parseResponseCSV(body string) ([]*EquitySnapshot, error) {
+func parseResponseCSV(body string, function FunctionType) ([]*EquitySnapshot, error) {
 	lines := strings.SplitN(body, "\n", -1)
 	keys := strings.SplitN(lines[0], ",", -1)
 	var out []*EquitySnapshot
@@ -33,7 +33,7 @@ func parseResponseCSV(body string) ([]*EquitySnapshot, error) {
 		for i, p := range parts {
 			dataMap[keys[i]] = p
 		}
-		snapshot, err := csvDataMapToEquitySnapshot(dataMap)
+		snapshot, err := csvDataMapToEquitySnapshot(dataMap, function)
 		// This should maybe continue
 		if err != nil {
 			return nil, err
@@ -43,7 +43,7 @@ func parseResponseCSV(body string) ([]*EquitySnapshot, error) {
 	return out, nil
 }
 
-func csvDataMapToEquitySnapshot(dataMap map[string]string) (*EquitySnapshot, error) {
+func csvDataMapToEquitySnapshot(dataMap map[string]string, function FunctionType) (*EquitySnapshot, error) {
 	openPriceCents, err := getCentsValueForKeyOrNil(csvKeyOpen, dataMap)
 	if err != nil {
 		return nil, err
@@ -69,8 +69,16 @@ func csvDataMapToEquitySnapshot(dataMap map[string]string) (*EquitySnapshot, err
 		}
 		volumeShares = &volumeSharesInt
 	}
+	timestampStr, ok := dataMap[string(csvKeyTimestamp)]
+	if !ok {
+		return nil, fmt.Errorf("no timestamp found")
+	}
+	time, err := parseTimestamp(timestampStr, function)
+	if err != nil {
+		return nil, err
+	}
 	return &EquitySnapshot{
-		Time:            time.Now(),
+		Time:            *time,
 		OpenPriceCents:  openPriceCents,
 		ClosePriceCents: closePriceCents,
 		HighPriceCents:  highPriceCents,
@@ -92,4 +100,19 @@ func getCentsValueForKeyOrNil(key csvKey, dataMap map[string]string) (*int64, er
 	}
 	centsValue := int64(math.Round(float * 100))
 	return &centsValue, nil
+}
+
+func parseTimestamp(timestampString string, function FunctionType) (*time.Time, error) {
+	var layout string
+	switch function {
+	case FunctionTypeDaily:
+		layout = "2006-01-02"
+	default:
+		return nil, fmt.Errorf("unsupported function type")
+	}
+	t, err := time.Parse(layout, timestampString)
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
 }
