@@ -60,12 +60,22 @@ func csvDataMapToEquitySnapshot(dataMap map[string]string) (*EquitySnapshot, err
 	if err != nil {
 		return nil, err
 	}
+	var volumeShares *int64
+	volumeSharesStr, ok := dataMap[string(csvKeyVolume)]
+	if ok {
+		volumeSharesInt, err := strconv.ParseInt(volumeSharesStr, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		volumeShares = &volumeSharesInt
+	}
 	return &EquitySnapshot{
 		Time:            time.Now(),
 		OpenPriceCents:  openPriceCents,
 		ClosePriceCents: closePriceCents,
 		HighPriceCents:  highPriceCents,
 		LowPriceCents:   lowPriceCents,
+		VolumeShares:    volumeShares,
 	}, nil
 }
 
@@ -80,6 +90,6 @@ func getCentsValueForKeyOrNil(key csvKey, dataMap map[string]string) (*int64, er
 	if err != nil {
 		return nil, err
 	}
-	centsValue := int64(math.Round(float) * 100)
+	centsValue := int64(math.Round(float * 100))
 	return &centsValue, nil
 }

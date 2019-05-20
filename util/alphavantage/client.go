@@ -81,7 +81,6 @@ func (c *alphaVantageClient) GetTimeSeries(input GetTimeSeriesInput) ([]*EquityS
 	str := string(bodyBytes)
 	switch input.DataType {
 	case DataTypeCSV:
-		fmt.Println(str)
 		return parseResponseCSV(str)
 	case DataTypeJSON:
 		return nil, fmt.Errorf("json type not implemented")

@@ -1,0 +1,8 @@
+FROM golang:1.12.5-alpine3.9
+
+RUN apk add build-base
+
+WORKDIR $GOPATH/src/alphavantage
+COPY . .
+
+CMD ["go", "test", "."]
