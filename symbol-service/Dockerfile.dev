@@ -15,4 +15,4 @@ RUN dep ensure --vendor-only
 
 COPY . .
 
-CMD ["sh"]
+CMD ["go", "run", "."]
