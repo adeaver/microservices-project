@@ -13,6 +13,11 @@ services:
       - ./symbol-service:$GOPATH/src/symbol-service
     ports:
       - "5000:5000"
+    environment:
+      - POSTGRES_USER=symbols_dev
+      - POSTGRES_PASSWORD=development
+      - POSTGRES_DB=symbols_dev
+      - POSTGRES_HOST=symbols_db
   timeseries_worker:
     build:
       dockerfile: Dockerfile.dev
