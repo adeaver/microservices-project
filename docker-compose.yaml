@@ -1,0 +1,22 @@
+version: '3'
+services:
+  symbols_db:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./symbol-service/migrations
+  symbols_service:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./symbol-service
+    volumes:
+      - $GOPATH/src/symbol-service/vendor
+      - ./symbol-service:$GOPATH/src/symbol-service
+    ports:
+      - "5000:5000"
+  timeseries_worker:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./timeseries-worker
+    tty: true
+    environment:
+      - ALPHA_VANTAGE_KEY
