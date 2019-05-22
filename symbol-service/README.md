@@ -2,6 +2,6 @@
 
 #### TODO
 
-[] Live reloading
-[] Generalize handling http
-[] Persist postgres
+- [] Live reloading
+- [] Generalize handling http
+- [] Persist postgres
