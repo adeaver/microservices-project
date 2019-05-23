@@ -5,7 +5,7 @@ type Symbol struct {
 	Name                 string  `db:"name" json:"name"`
 	Symbol               string  `db:"symbol" json:"symbol"`
 	MarketCapitalization int64   `db:"market_capitalization" json:"market_capitalization"`
-	Sector               string  `db:"sector" json:"sector"`
-	Industry             string  `db:"industry" json:"industry"`
+	Sector               *string `db:"sector,omitempty" json:"sector,omitempty"`
+	Industry             *string `db:"industry,omitempty" json:"industry,omitempty"`
 	Exchange             string  `db:"exchange" json:"exchange"`
 }

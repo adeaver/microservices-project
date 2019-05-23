@@ -11,4 +11,4 @@ CREATE TABLE symbols(
     PRIMARY KEY (id)
 );
 
-CREATE INDEX symbols_idx_symbol ON symbols(symbol);
+CREATE UNIQUE INDEX symbols_idx_symbol ON symbols(symbol);

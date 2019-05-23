@@ -1,0 +1,3 @@
+# TODO: check for postgres file once I have some form of persistence
+# # version python and potentially have it install from somewhere or be part of docker compose?
+python tools/populate_symbols/populate_symbols.py
