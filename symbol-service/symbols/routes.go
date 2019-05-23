@@ -11,6 +11,7 @@ import (
 
 func RegisterRoutes(r *mux.Router, db *sqlx.DB) {
 	r.HandleFunc("/get_symbols_1", withDB(db, handleGetAllSymbols)).Methods("GET")
+	r.HandleFunc("/get_top_symbols_1", withDB(db, handleGetTopSymbolsByMarketCap)).Methods("GET")
 	r.HandleFunc("/insert_symbol_1", withDB(db, handleInsertSymbol)).Methods("POST")
 }
 
@@ -56,4 +57,10 @@ func handleInsertSymbol(db *sqlx.DB, w http.ResponseWriter, r *http.Request) {
 	tx.MustExec("INSERT INTO symbols (name, symbol, market_capitalization, sector, industry, exchange) VALUES ($1, $2, $3, $4, $5, $6)", s.Name, s.Symbol, s.MarketCapitalization, s.Sector, s.Industry, s.Exchange)
 	tx.Commit()
 	makeJSONResponse(w, http.StatusOK, map[string]bool{"success": true})
+}
+
+func handleGetTopSymbolsByMarketCap(db *sqlx.DB, w http.ResponseWriter, r *http.Request) {
+	var symbols []Symbol
+	db.Select(&symbols, "SELECT * FROM symbols ORDER BY market_capitalization DESC LIMIT 500")
+	makeJSONResponse(w, http.StatusOK, symbols)
 }
