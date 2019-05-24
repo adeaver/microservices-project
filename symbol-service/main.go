@@ -28,5 +28,5 @@ func main() {
 		panic(err)
 	}
 	symbols.RegisterRoutes(r, db)
-	http.ListenAndServe(":5000", r)
+	http.ListenAndServe(":5050", r)
 }

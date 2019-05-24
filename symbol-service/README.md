@@ -2,8 +2,8 @@
 
 #### TODO
 
-- [ ] Live reloading
+- [X] Live reloading
 - [ ] Generalize handling http
-- [ ] Persist postgres
+- [X] Persist postgres
 - [ ] Logging that doesn't suck
 - [ ] sqlx wrapper

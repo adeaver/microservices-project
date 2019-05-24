@@ -4,13 +4,15 @@ services:
     build:
       dockerfile: Dockerfile.dev
       context: ./symbol-service/migrations
+    volumes:
+      - ./symbol-service/migrations/data:/var/lib/postgresql/data
   symbols_service:
     build:
       dockerfile: Dockerfile.dev
       context: ./symbol-service
     volumes:
-      - $GOPATH/src/symbol-service/vendor
-      - ./symbol-service:$GOPATH/src/symbol-service
+      - /go/src/microservices-project/symbol-service/vendor
+      - ./symbol-service:/go/src/microservices-project/symbol-service/
     ports:
       - "5000:5000"
     environment:
