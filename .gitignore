@@ -1,2 +1,2 @@
-./symbol-service/gin-bin
-./symbol-service/main
+symbol-service/gin-bin
+symbol-service/main
