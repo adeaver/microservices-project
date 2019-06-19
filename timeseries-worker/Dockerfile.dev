@@ -6,7 +6,7 @@ RUN apk add --no-cache curl
 # TODO(adeaver): make this install a specific version
 RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 
-WORKDIR $GOPATH/src/timeseries-worker
+WORKDIR $GOPATH/src/microservices-project/timeseries-worker
 
 # INSTALL GOLANG DEPENDENCIES
 COPY Gopkg.lock .

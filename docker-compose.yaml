@@ -27,3 +27,5 @@ services:
     tty: true
     environment:
       - ALPHA_VANTAGE_KEY
+      - SYMBOL_SERVICE_HOST=symbols_service
+      - SYMBOL_SERVICE_PORT=5000
