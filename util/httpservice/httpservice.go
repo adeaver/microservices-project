@@ -45,7 +45,7 @@ func (r RouteMethod) Str() string {
 type Route struct {
 	Endpoint string
 	Method   RouteMethod
-	Func     func(w http.ResponseWriter, r *http.Request) (Response, error)
+	Func     func(w http.ResponseWriter, r *http.Request) (*Response, error)
 }
 
 type Response struct {
@@ -53,31 +53,33 @@ type Response struct {
 	StatusCode int
 }
 
-type withDBHandler func(db *sqlx.DB, w http.ResponseWriter, r *http.Request) (Response, error)
+type withDBHandler func(db *sqlx.DB, w http.ResponseWriter, r *http.Request) (*Response, error)
 
-func WithDB(db *sqlx.DB, f withDBHandler) func(http.ResponseWriter, *http.Request) (Response, error) {
-	return func(w http.ResponseWriter, r *http.Request) (Response, error) {
+func WithDB(db *sqlx.DB, f withDBHandler) func(http.ResponseWriter, *http.Request) (*Response, error) {
+	return func(w http.ResponseWriter, r *http.Request) (*Response, error) {
 		return f(db, w, r)
 	}
 }
 
-func registerRoute(f func(http.ResponseWriter, *http.Request) (Response, error)) func(w http.ResponseWriter, r *http.Request) {
+func registerRoute(f func(http.ResponseWriter, *http.Request) (*Response, error)) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		payload, err := f(w, r)
 		if err != nil {
 			sendErrorResponse(w, err)
 			return
 		}
-		sendJSONResponse(w, payload)
+		if payload != nil {
+			sendJSONResponse(w, *payload)
+		}
 	}
 }
 
-func MakeOkResponse(v interface{}) Response {
+func MakeOkResponse(v interface{}) *Response {
 	response, err := json.Marshal(v)
 	if err != nil {
 		panic(err)
 	}
-	return Response{
+	return &Response{
 		Payload:    response,
 		StatusCode: http.StatusOK,
 	}
