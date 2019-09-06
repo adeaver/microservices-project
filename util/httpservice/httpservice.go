@@ -2,6 +2,7 @@ package httpservice
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -37,7 +38,7 @@ func (r RouteMethod) Str() string {
 	case RouteMethodPOST:
 		return "POST"
 	default:
-		panic("unrecongized route method: %s", r)
+		panic(fmt.Sprintf("unrecongized route method: %s", r))
 	}
 }
 
