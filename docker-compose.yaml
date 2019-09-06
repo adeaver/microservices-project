@@ -20,6 +20,19 @@ services:
       - POSTGRES_PASSWORD=development
       - POSTGRES_DB=symbols_dev
       - POSTGRES_HOST=symbols_db
+  quote_service:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./quote-service
+    volumes:
+      - ./quote-service:/go/src/microservices-project/quote-service
+      - /go/src/microservices-project/quote-service/vendor
+    ports:
+      - "3000:3000"
+    environment:
+      - ALPHA_VANTAGE_KEY
+      - SYMBOL_SERVICE_HOST=symbols_service
+      - SYMBOL_SERVICE_PORT=5000
   # timeseries_worker:
   #   build:
   #     dockerfile: Dockerfile.dev
