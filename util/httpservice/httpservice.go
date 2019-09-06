@@ -48,9 +48,7 @@ type Route struct {
 	Func     func(w http.ResponseWriter, r *http.Request) (interface{}, error)
 }
 
-type WithDBHandler func(db *sqlx.DB, w http.ResponseWriter, r *http.Request) (interface{}, error)
-
-func WithDB(db *sqlx.DB, f WithDBHandler) func(http.ResponseWriter, *http.Request) (interface{}, error) {
+func WithDB(db *sqlx.DB, f func(db *sqlx.DB, w http.ResponseWriter, r *http.Request) (interface{}, error)) func(http.ResponseWriter, *http.Request) (interface{}, error) {
 	return func(w http.ResponseWriter, r *http.Request) (interface{}, error) {
 		return f(db, w, r)
 	}
