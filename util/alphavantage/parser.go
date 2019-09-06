@@ -34,9 +34,10 @@ func parseResponseCSV(body string, function FunctionType) ([]*EquitySnapshot, er
 			dataMap[keys[i]] = p
 		}
 		snapshot, err := csvDataMapToEquitySnapshot(dataMap, function)
-		// This should maybe continue
 		if err != nil {
-			return nil, err
+			// TODO: logging
+			fmt.Printf("error on line %s: %s", data, err.Error())
+			continue
 		}
 		out = append(out, snapshot)
 	}

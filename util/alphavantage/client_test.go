@@ -20,3 +20,19 @@ func TestMakeURL(t *testing.T) {
 		t.Errorf("Expected URL %v, but got %v", expectedURL, url.String())
 	}
 }
+
+func TestNoError(t *testing.T) {
+	client := NewClient("testkey")
+	output, err := client.GetTimeSeries(GetTimeSeriesInput{
+		Function:   FunctionTypeDaily,
+		OutputSize: OutputSizeCompact,
+		DataType:   DataTypeCSV,
+		Symbol:     "GOOG",
+	})
+	if err != nil {
+		t.Errorf("Expecting nil err, got %v", err)
+	}
+	if len(output) <= 0 {
+		t.Errorf("output size is zero or negative: %d", len(output))
+	}
+}
