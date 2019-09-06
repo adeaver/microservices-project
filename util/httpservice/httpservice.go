@@ -45,36 +45,58 @@ func (r RouteMethod) Str() string {
 type Route struct {
 	Endpoint string
 	Method   RouteMethod
-	Func     func(w http.ResponseWriter, r *http.Request) (interface{}, error)
+	Func     func(w http.ResponseWriter, r *http.Request) (Response, error)
 }
 
-func WithDB(db *sqlx.DB, f func(db *sqlx.DB, w http.ResponseWriter, r *http.Request) (interface{}, error)) func(http.ResponseWriter, *http.Request) (interface{}, error) {
-	return func(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+type Response struct {
+	Payload    []byte
+	StatusCode int
+}
+
+type withDBHandler func(db *sqlx.DB, w http.ResponseWriter, r *http.Request) (Response, error)
+
+func WithDB(db *sqlx.DB, f withDBHandler) func(http.ResponseWriter, *http.Request) (Response, error) {
+	return func(w http.ResponseWriter, r *http.Request) (Response, error) {
 		return f(db, w, r)
 	}
 }
 
-func registerRoute(f func(http.ResponseWriter, *http.Request) (interface{}, error)) func(w http.ResponseWriter, r *http.Request) {
+func registerRoute(f func(http.ResponseWriter, *http.Request) (Response, error)) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		payload, err := f(w, r)
 		if err != nil {
-			makeErrorResponse(w, err)
+			sendErrorResponse(w, err)
 			return
 		}
-		makeJSONResponse(w, http.StatusOK, payload)
+		sendJSONResponse(w, payload)
 	}
 }
 
-func makeJSONResponse(w http.ResponseWriter, code int, payload interface{}) {
-	response, err := json.Marshal(payload)
+func MakeOkResponse(v interface{}) Response {
+	response, err := json.Marshal(v)
 	if err != nil {
 		panic(err)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	w.Write(response)
+	return Response{
+		Payload:    response,
+		StatusCode: http.StatusOK,
+	}
 }
 
-func makeErrorResponse(w http.ResponseWriter, err error) {
-	makeJSONResponse(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+func sendJSONResponse(w http.ResponseWriter, response Response) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	w.Write(response.Payload)
+}
+
+func sendErrorResponse(w http.ResponseWriter, err error) {
+	errorMap := map[string]string{"error": err.Error()}
+	response, err := json.Marshal(errorMap)
+	if err != nil {
+		panic(err)
+	}
+	sendJSONResponse(w, Response{
+		Payload:    response,
+		StatusCode: http.StatusBadRequest,
+	})
 }
