@@ -3,10 +3,9 @@ package main
 import (
 	"fmt"
 	"microservices-project/symbol-service/symbols"
-	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
+	"github.com/adeaver/microservices-project/util/httpservice"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -21,12 +20,14 @@ func mustConnectionString() string {
 }
 
 func main() {
-	r := mux.NewRouter()
 	connStr := mustConnectionString()
 	db, err := sqlx.Connect("postgres", connStr)
 	if err != nil {
 		panic(err)
 	}
-	symbols.RegisterRoutes(r, db)
-	http.ListenAndServe(":5050", r)
+	s := httpservice.Service{
+		Routes:     symbols.MakeRouteDefinitions(db),
+		ListenPost: ":5050",
+	}
+	s.Start()
 }

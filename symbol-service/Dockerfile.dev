@@ -11,7 +11,7 @@ WORKDIR $GOPATH/src/microservices-project/symbol-service
 # INSTALL GOLANG DEPENDENCIES
 COPY Gopkg.lock .
 COPY Gopkg.toml .
-RUN dep ensure --vendor-only
+RUN dep ensure -vendor-only
 
 RUN go get github.com/codegangsta/gin
 

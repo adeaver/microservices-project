@@ -2,65 +2,56 @@ package symbols
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/adeaver/microservices-project/util/httpservice"
+
 	"github.com/jmoiron/sqlx"
 )
 
-func RegisterRoutes(r *mux.Router, db *sqlx.DB) {
-	r.HandleFunc("/get_symbols_1", withDB(db, handleGetAllSymbols)).Methods("GET")
-	r.HandleFunc("/get_top_symbols_1", withDB(db, handleGetTopSymbolsByMarketCap)).Methods("GET")
-	r.HandleFunc("/insert_symbol_1", withDB(db, handleInsertSymbol)).Methods("POST")
-}
-
-// TODO: put this in a middleware
-type withDBHandler func(db *sqlx.DB, w http.ResponseWriter, r *http.Request)
-
-func withDB(db *sqlx.DB, f withDBHandler) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		f(db, w, r)
+func MakeRouteDefinitions(db *sqlx.DB) []httpservice.Route {
+	return []httpservice.Route{
+		{
+			Endpoint: "/get_symbols_1",
+			Func:     httpservice.WithDB(db, handleGetAllSymbols),
+			Method:   httpservice.RouteMethodGET,
+		},
+		{
+			Endpoint: "/get_top_symbols_1",
+			Func:     httpservice.WithDB(db, handleGetTopSymbolsByMarketCap),
+			Method:   httpservice.RouteMethodGET,
+		},
+		{
+			Endpoint: "/insert_symbol_1",
+			Func:     httpservice.WithDB(db, handleInsertSymbol),
+			Method:   httpservice.RouteMethodPOST,
+		},
 	}
 }
 
-func makeJSONResponse(w http.ResponseWriter, code int, payload interface{}) {
-	response, err := json.Marshal(payload)
-	if err != nil {
-		panic(err)
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	w.Write(response)
-}
-
-func handleGetAllSymbols(db *sqlx.DB, w http.ResponseWriter, r *http.Request) {
+func handleGetAllSymbols(db *sqlx.DB, w http.ResponseWriter, r *http.Request) (*httpservice.Response, error) {
 	var symbols []Symbol
 	db.Select(&symbols, "SELECT * FROM symbols")
-	makeJSONResponse(w, http.StatusOK, symbols)
+	return httpservice.MakeOKResponse(symbols), nil
 }
 
-func handleInsertSymbol(db *sqlx.DB, w http.ResponseWriter, r *http.Request) {
+func handleInsertSymbol(db *sqlx.DB, w http.ResponseWriter, r *http.Request) (*httpservice.Response, error) {
 	var s Symbol
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&s); err != nil {
-		makeJSONResponse(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
-		return
+		return nil, err
 	}
-	fmt.Println("symbol %+v", s)
 	tx, err := db.Beginx()
 	if err != nil {
-		makeJSONResponse(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
-		return
+		return nil, err
 	}
 	// TODO: this needs a wrapper
 	tx.MustExec("INSERT INTO symbols (name, symbol, market_capitalization, sector, industry, exchange) VALUES ($1, $2, $3, $4, $5, $6)", s.Name, s.Symbol, s.MarketCapitalization, s.Sector, s.Industry, s.Exchange)
 	tx.Commit()
-	makeJSONResponse(w, http.StatusOK, map[string]bool{"success": true})
+	return httpservice.MakeOKResponse(map[string]bool{"success": true}), nil
 }
-
-func handleGetTopSymbolsByMarketCap(db *sqlx.DB, w http.ResponseWriter, r *http.Request) {
+func handleGetTopSymbolsByMarketCap(db *sqlx.DB, w http.ResponseWriter, r *http.Request) (*httpservice.Response, error) {
 	var symbols []Symbol
 	db.Select(&symbols, "SELECT * FROM symbols ORDER BY market_capitalization DESC LIMIT 500")
-	makeJSONResponse(w, http.StatusOK, symbols)
+	return httpservice.MakeOKResponse(symbols), nil
 }
