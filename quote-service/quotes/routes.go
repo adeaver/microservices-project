@@ -8,14 +8,20 @@ import (
 
 	"github.com/adeaver/microservices-project/util/alphavantage"
 	"github.com/adeaver/microservices-project/util/httpservice"
+	"github.com/jmoiron/sqlx"
 )
 
-func MakeRouteDefinitions() []httpservice.Route {
+func MakeRouteDefinitions(db *sqlx.DB) []httpservice.Route {
 	return []httpservice.Route{
 		{
-			Endpoint: "/internal/get_quotes_for_top_symbols_1",
-			Func:     handleGetQuotesForTopSymbols,
+			Endpoint: "/internal/get_all_quotes_for_top_symbols_1",
+			Func:     httpservice.WithDB(db, handleGetAllQuotesForTopSymbols),
 			Method:   httpservice.RouteMethodGET,
+		},
+		{
+			Endpoint: "/get_all_quotes_for_symbol_1",
+			Func:     httpservice.WithDB(db, handleGetAllQuotesForSymbol),
+			Method:   httpservice.RouteMethodPOST,
 		},
 	}
 }
@@ -26,26 +32,57 @@ const (
 	symbolServicePort  = "SYMBOL_SERVICE_PORT"
 )
 
-func handleGetQuotesForTopSymbols(w http.ResponseWriter, r *http.Request) (*httpservice.Response, error) {
+// There are all sorts of ways this could be faster
+// 1) Parallelize the collection and the insertion
+// 2) Dispatch these to workers
+func handleGetAllQuotesForTopSymbols(db *sqlx.DB, w http.ResponseWriter, r *http.Request) (*httpservice.Response, error) {
 	alphavantageAPIKey := os.Getenv(alphavantageAPIKey)
 	client := alphavantage.NewClient(alphavantageAPIKey)
-	_, err := client.GetTimeSeries(alphavantage.GetTimeSeriesInput{
-		Function:   alphavantage.FunctionTypeDaily,
-		OutputSize: alphavantage.OutputSizeCompact,
-		DataType:   alphavantage.DataTypeCSV,
-		Symbol:     "GOOG",
+	return injectSymbols(func(symbols []Symbol) (*httpservice.Response, error) {
+		for _, s := range symbols[:10] {
+			data, err := client.GetTimeSeries(alphavantage.GetTimeSeriesInput{
+				Function:   alphavantage.FunctionTypeDaily,
+				OutputSize: alphavantage.OutputSizeCompact,
+				DataType:   alphavantage.DataTypeCSV,
+				Symbol:     s.Symbol,
+			})
+			if err != nil {
+				return nil, err
+			}
+			var toInsert []Quote
+			for _, d := range data {
+				if d == nil {
+					continue
+				}
+				toInsert = append(toInsert, quoteFromEquitySnapshot(s, *d))
+			}
+			tx, err := db.Beginx()
+			if err != nil {
+				return nil, err
+			}
+			tx.NamedExec("INSERT INTO quotes (symbol, time, open_price_cents, high_price_cents, low_price_cents, close_price_cents, volume_shares) VALUES (:symbol, :time, :open_price_cents, :high_price_cents, :low_price_cents, :close_price_cents, :volume_shares)", toInsert)
+			tx.Commit()
+		}
+		return httpservice.MakeOKResponse(map[string]bool{"success": true}), nil
 	})
-	if err != nil {
-		return nil, err
-	}
-	symbols, err := getSymbols()
-	if err != nil {
-		return nil, err
-	}
-	return httpservice.MakeOKResponse(symbols), nil
 }
 
-func getSymbols() ([]Symbol, error) {
+type getAllQuotesForSymbolRequest struct {
+	Symbol string `json"`
+}
+
+func handleGetAllQuotesForSymbol(db *sqlx.DB, w http.ResponseWriter, r *http.Request) (*httpservice.Response, error) {
+	var req getAllQuotesForSymbolRequest
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&req); err != nil {
+		return nil, err
+	}
+	var quotes []Quote
+	db.Select(&quotes, fmt.Sprintf("SELECT * FROM quotes WHERE symbol='%s'", req.Symbol))
+	return httpservice.MakeOKResponse(quotes), nil
+}
+
+func injectSymbols(f func(symbols []Symbol) (*httpservice.Response, error)) (*httpservice.Response, error) {
 	symbolServiceHost := os.Getenv(symbolServiceHost)
 	symbolServicePort := os.Getenv(symbolServicePort)
 	req, err := http.NewRequest("GET", fmt.Sprintf("http://%v:%v/get_top_symbols_1", symbolServiceHost, symbolServicePort), nil)
@@ -65,5 +102,5 @@ func getSymbols() ([]Symbol, error) {
 	if err := decoder.Decode(&symbols); err != nil {
 		return nil, err
 	}
-	return symbols, nil
+	return f(symbols)
 }

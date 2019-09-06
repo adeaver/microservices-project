@@ -10,7 +10,7 @@
     "util/httpservice",
   ]
   pruneopts = "UT"
-  revision = "2a3c02afd89e0d7b88ac2812e0f5b2bc9bc5f923"
+  revision = "82a53d34f1abfba7610b8a1ffe6324408b790bfe"
 
 [[projects]]
   digest = "1:cbec35fe4d5a4fba369a656a8cd65e244ea2c743007d8f6c1ccb132acf9d1296"
@@ -31,12 +31,26 @@
   revision = "d161d7a76b5661016ad0b085869f77fd410f3e6a"
   version = "v1.2.0"
 
+[[projects]]
+  digest = "1:12cb143f2148bf54bcd9fe622abac17325e85eeb1d84b8ec6caf1c80232108fd"
+  name = "github.com/lib/pq"
+  packages = [
+    ".",
+    "oid",
+    "scram",
+  ]
+  pruneopts = "UT"
+  revision = "3427c32cb71afc948325f299f040e53c1dd78979"
+  version = "v1.2.0"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/adeaver/microservices-project/util/alphavantage",
     "github.com/adeaver/microservices-project/util/httpservice",
+    "github.com/jmoiron/sqlx",
+    "github.com/lib/pq",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
