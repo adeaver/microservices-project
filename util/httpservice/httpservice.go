@@ -74,7 +74,7 @@ func registerRoute(f func(http.ResponseWriter, *http.Request) (*Response, error)
 	}
 }
 
-func MakeOkResponse(v interface{}) *Response {
+func MakeOKResponse(v interface{}) *Response {
 	response, err := json.Marshal(v)
 	if err != nil {
 		panic(err)
