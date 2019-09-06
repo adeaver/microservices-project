@@ -27,7 +27,7 @@ func main() {
 	}
 	s := httpservice.Service{
 		Routes:     symbols.MakeRouteDefinitions(db),
-		ListenPost: ":5050",
+		ListenPort: ":5050",
 	}
 	s.Start()
 }

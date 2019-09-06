@@ -11,8 +11,8 @@ services:
       dockerfile: Dockerfile.dev
       context: ./symbol-service
     volumes:
+      - ./symbol-service:/go/src/microservices-project/symbol-service
       - /go/src/microservices-project/symbol-service/vendor
-      - ./symbol-service:/go/src/microservices-project/symbol-service/
     ports:
       - "5000:5000"
     environment:
@@ -20,12 +20,12 @@ services:
       - POSTGRES_PASSWORD=development
       - POSTGRES_DB=symbols_dev
       - POSTGRES_HOST=symbols_db
-  timeseries_worker:
-    build:
-      dockerfile: Dockerfile.dev
-      context: ./timeseries-worker
-    tty: true
-    environment:
-      - ALPHA_VANTAGE_KEY
-      - SYMBOL_SERVICE_HOST=symbols_service
-      - SYMBOL_SERVICE_PORT=5000
+  # timeseries_worker:
+  #   build:
+  #     dockerfile: Dockerfile.dev
+  #     context: ./timeseries-worker
+  #   tty: true
+  #   environment:
+  #     - ALPHA_VANTAGE_KEY
+  #     - SYMBOL_SERVICE_HOST=symbols_service
+  #     - SYMBOL_SERVICE_PORT=5000
