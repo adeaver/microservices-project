@@ -7,7 +7,7 @@
   name = "github.com/adeaver/microservices-project"
   packages = ["util/httpservice"]
   pruneopts = "UT"
-  revision = "349b21b30dc8f1418f131ee99004dd40714d3288"
+  revision = "049b65d26014837eaa6951db0092a178e8314593"
 
 [[projects]]
   digest = "1:cbec35fe4d5a4fba369a656a8cd65e244ea2c743007d8f6c1ccb132acf9d1296"
