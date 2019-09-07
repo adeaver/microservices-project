@@ -7,6 +7,7 @@ import (
 
 	"github.com/adeaver/microservices-project/util/httpservice"
 	"github.com/jmoiron/sqlx"
+
 	_ "github.com/lib/pq"
 )
 

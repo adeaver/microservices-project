@@ -27,6 +27,7 @@ services:
     volumes:
       - ./quote-service/migrations/data:/var/lib/postgresql/data
   quote_service:
+    tty: true
     build:
       dockerfile: Dockerfile.dev
       context: ./quote-service
@@ -43,12 +44,3 @@ services:
       - POSTGRES_PASSWORD=development
       - POSTGRES_DB=quotes_dev
       - POSTGRES_HOST=quotes_db
-  # timeseries_worker:
-  #   build:
-  #     dockerfile: Dockerfile.dev
-  #     context: ./timeseries-worker
-  #   tty: true
-  #   environment:
-  #     - ALPHA_VANTAGE_KEY
-  #     - SYMBOL_SERVICE_HOST=symbols_service
-  #     - SYMBOL_SERVICE_PORT=5000

@@ -1,3 +1,5 @@
 */gin-bin
 */main
 */vendor
+*/vendor/
+*/.vendor-new/

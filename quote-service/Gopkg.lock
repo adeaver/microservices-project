@@ -10,7 +10,7 @@
     "util/httpservice",
   ]
   pruneopts = "UT"
-  revision = "83cc7ec6b25ae82038af093383fdd118ce4224ab"
+  revision = "1e6f429c8d0c8a145089754b770e9f16a2cbdbe0"
 
 [[projects]]
   digest = "1:cbec35fe4d5a4fba369a656a8cd65e244ea2c743007d8f6c1ccb132acf9d1296"
