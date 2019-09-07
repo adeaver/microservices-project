@@ -35,6 +35,7 @@ const (
 // There are all sorts of ways this could be faster
 // 1) Parallelize the collection and the insertion
 // 2) Dispatch these to workers
+// 3) Batch insert into postgres
 func handleGetAllQuotesForTopSymbols(db *sqlx.DB, w http.ResponseWriter, r *http.Request) (*httpservice.Response, error) {
 	alphavantageAPIKey := os.Getenv(alphavantageAPIKey)
 	client := alphavantage.NewClient(alphavantageAPIKey)
@@ -49,18 +50,16 @@ func handleGetAllQuotesForTopSymbols(db *sqlx.DB, w http.ResponseWriter, r *http
 			if err != nil {
 				return nil, err
 			}
-			var toInsert []Quote
-			for _, d := range data {
-				if d == nil {
-					continue
-				}
-				toInsert = append(toInsert, quoteFromEquitySnapshot(s, *d))
-			}
 			tx, err := db.Beginx()
 			if err != nil {
 				return nil, err
 			}
-			tx.NamedExec("INSERT INTO quotes (symbol, time, open_price_cents, high_price_cents, low_price_cents, close_price_cents, volume_shares) VALUES (:symbol, :time, :open_price_cents, :high_price_cents, :low_price_cents, :close_price_cents, :volume_shares)", toInsert)
+			for _, d := range data {
+				if d == nil {
+					continue
+				}
+				tx.NamedExec("INSERT INTO quotes (symbol, time, open_price_cents, high_price_cents, low_price_cents, close_price_cents, volume_shares) VALUES (:symbol, :time, :open_price_cents, :high_price_cents, :low_price_cents, :close_price_cents, :volume_shares) ON CONFLICT DO NOTHING", quoteFromEquitySnapshot(s, *d))
+			}
 			tx.Commit()
 		}
 		return httpservice.MakeOKResponse(map[string]bool{"success": true}), nil
@@ -78,7 +77,7 @@ func handleGetAllQuotesForSymbol(db *sqlx.DB, w http.ResponseWriter, r *http.Req
 		return nil, err
 	}
 	var quotes []Quote
-	db.Select(&quotes, fmt.Sprintf("SELECT * FROM quotes WHERE symbol='%s'", req.Symbol))
+	db.Select(&quotes, fmt.Sprintf("SELECT * FROM quotes WHERE symbol = '%s'", req.Symbol))
 	return httpservice.MakeOKResponse(quotes), nil
 }
 

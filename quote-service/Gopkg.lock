@@ -3,14 +3,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:49d79af4a317430090dcb11a79922befb1cb226b588303e9e4d1422de8334b38"
+  digest = "1:d7c4fd71ea95c6cdae0e68df415d855f091fad1790b8beb3485a9fcb1dcc29d5"
   name = "github.com/adeaver/microservices-project"
   packages = [
     "util/alphavantage",
     "util/httpservice",
   ]
   pruneopts = "UT"
-  revision = "82a53d34f1abfba7610b8a1ffe6324408b790bfe"
+  revision = "83cc7ec6b25ae82038af093383fdd118ce4224ab"
 
 [[projects]]
   digest = "1:cbec35fe4d5a4fba369a656a8cd65e244ea2c743007d8f6c1ccb132acf9d1296"
