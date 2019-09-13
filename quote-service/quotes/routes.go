@@ -6,16 +6,20 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/adeaver/microservices-project/util/alphavantage"
 	"github.com/adeaver/microservices-project/util/httpservice"
 	"github.com/jmoiron/sqlx"
+	"github.com/streadway/amqp"
 )
 
-func MakeRouteDefinitions(db *sqlx.DB) []httpservice.Route {
+func MakeRouteDefinitions(db *sqlx.DB, ch *amqp.Channel) []httpservice.Route {
+	dataUtils := httpservice.InjectedDataUtils{
+		Database: db,
+		Channel:  ch,
+	}
 	return []httpservice.Route{
 		{
 			Endpoint: "/internal/get_all_quotes_for_top_symbols_1",
-			Func:     httpservice.WithDB(db, handleGetAllQuotesForTopSymbols),
+			Func:     httpservice.WithInjectedDataUtils(dataUtils, handleGetAllQuotesForTopSymbols),
 			Method:   httpservice.RouteMethodGET,
 		},
 		{
@@ -27,42 +31,50 @@ func MakeRouteDefinitions(db *sqlx.DB) []httpservice.Route {
 }
 
 const (
-	alphavantageAPIKey = "ALPHA_VANTAGE_KEY"
-	symbolServiceHost  = "SYMBOL_SERVICE_HOST"
-	symbolServicePort  = "SYMBOL_SERVICE_PORT"
+	symbolServiceHost    = "SYMBOL_SERVICE_HOST"
+	symbolServicePort    = "SYMBOL_SERVICE_PORT"
+	rabbitMQSymbolsQueue = "RABBITMQ_SYMBOLS_QUEUE"
 )
 
 // There are all sorts of ways this could be faster
 // 1) Parallelize the collection and the insertion
 // 2) Dispatch these to workers
 // 3) Batch insert into postgres
-func handleGetAllQuotesForTopSymbols(db *sqlx.DB, w http.ResponseWriter, r *http.Request) (*httpservice.Response, error) {
-	alphavantageAPIKey := os.Getenv(alphavantageAPIKey)
-	client := alphavantage.NewClient(alphavantageAPIKey)
+func handleGetAllQuotesForTopSymbols(dataUtils httpservice.InjectedDataUtils, w http.ResponseWriter, r *http.Request) (*httpservice.Response, error) {
+	q, err := dataUtils.Channel.QueueDeclare(
+		os.Getenv(rabbitMQSymbolsQueue),
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
 	return injectSymbols(func(symbols []Symbol) (*httpservice.Response, error) {
-		for _, s := range symbols[:10] {
-			data, err := client.GetTimeSeries(alphavantage.GetTimeSeriesInput{
-				Function:   alphavantage.FunctionTypeDaily,
-				OutputSize: alphavantage.OutputSizeCompact,
-				DataType:   alphavantage.DataTypeCSV,
-				Symbol:     s.Symbol,
-			})
+		var errors []string
+		for _, s := range symbols {
+			msg, err := json.Marshal(s)
 			if err != nil {
-				return nil, err
+				errors = append(errors, fmt.Sprintf("error marshaling symbol: %s", err.Error()))
+				continue
 			}
-			tx, err := db.Beginx()
+			err = dataUtils.Channel.Publish(
+				"",
+				q.Name,
+				false,
+				false,
+				amqp.Publishing{
+					ContentType: "application/json",
+					Body:        []byte(msg),
+				})
 			if err != nil {
-				return nil, err
+				errors = append(errors, fmt.Sprintf("error publishing message: %s", err.Error()))
+				continue
 			}
-			for _, d := range data {
-				if d == nil {
-					continue
-				}
-				tx.NamedExec("INSERT INTO quotes (symbol, time, open_price_cents, high_price_cents, low_price_cents, close_price_cents, volume_shares) VALUES (:symbol, :time, :open_price_cents, :high_price_cents, :low_price_cents, :close_price_cents, :volume_shares) ON CONFLICT DO NOTHING", quoteFromEquitySnapshot(s, *d))
-			}
-			tx.Commit()
 		}
-		return httpservice.MakeOKResponse(map[string]bool{"success": true}), nil
+		return httpservice.MakeOKResponse(map[string][]string{"errors": errors}), nil
 	})
 }
 

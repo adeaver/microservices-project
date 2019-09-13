@@ -3,14 +3,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d7c4fd71ea95c6cdae0e68df415d855f091fad1790b8beb3485a9fcb1dcc29d5"
+  digest = "1:ee1a374ffc980c4104cb6ae6787fabfbf127ee4ef47c99747e9641482f7a3a56"
   name = "github.com/adeaver/microservices-project"
   packages = [
     "util/alphavantage",
     "util/httpservice",
   ]
   pruneopts = "UT"
-  revision = "1e6f429c8d0c8a145089754b770e9f16a2cbdbe0"
+  revision = "a55ef899566d726ed573020785aa7cc828152a91"
 
 [[projects]]
   digest = "1:cbec35fe4d5a4fba369a656a8cd65e244ea2c743007d8f6c1ccb132acf9d1296"
@@ -43,6 +43,14 @@
   revision = "3427c32cb71afc948325f299f040e53c1dd78979"
   version = "v1.2.0"
 
+[[projects]]
+  branch = "master"
+  digest = "1:3df46e572883257c46c470dc1796f9bc609d0d0d7339dd10358030649b9beb93"
+  name = "github.com/streadway/amqp"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "edfb9018d2714e4ec54dbaba37dbfef2bdadf0e4"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -51,6 +59,7 @@
     "github.com/adeaver/microservices-project/util/httpservice",
     "github.com/jmoiron/sqlx",
     "github.com/lib/pq",
+    "github.com/streadway/amqp",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
