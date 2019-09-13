@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
+	"github.com/streadway/amqp"
 )
 
 type Service struct {
@@ -51,6 +52,19 @@ type Route struct {
 type Response struct {
 	Payload    []byte
 	StatusCode int
+}
+
+type InjectedDataUtils struct {
+	Database *sqlx.DB
+	Channel  *amqp.Channel
+}
+
+type withInjectedDataUtilsHandler func(dataUtils InjectedDataUtils, w http.ResponseWriter, r *http.Request) (*Response, error)
+
+func withInjectedDataUtils(dataUtils InjectedDataUtils, f withInjectedDataUtilsHandler) func(http.ResponseWriter, *http.Request) (*Response, error) {
+	return func(w http.ResponseWriter, r *http.Request) (*Response, error) {
+		return f(dataUtils, w, r)
+	}
 }
 
 type withDBHandler func(db *sqlx.DB, w http.ResponseWriter, r *http.Request) (*Response, error)

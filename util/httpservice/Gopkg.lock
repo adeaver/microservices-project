@@ -20,12 +20,21 @@
   revision = "d161d7a76b5661016ad0b085869f77fd410f3e6a"
   version = "v1.2.0"
 
+[[projects]]
+  branch = "master"
+  digest = "1:3df46e572883257c46c470dc1796f9bc609d0d0d7339dd10358030649b9beb93"
+  name = "github.com/streadway/amqp"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "edfb9018d2714e4ec54dbaba37dbfef2bdadf0e4"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/gorilla/mux",
     "github.com/jmoiron/sqlx",
+    "github.com/streadway/amqp",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
