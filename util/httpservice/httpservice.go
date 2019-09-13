@@ -61,7 +61,7 @@ type InjectedDataUtils struct {
 
 type withInjectedDataUtilsHandler func(dataUtils InjectedDataUtils, w http.ResponseWriter, r *http.Request) (*Response, error)
 
-func withInjectedDataUtils(dataUtils InjectedDataUtils, f withInjectedDataUtilsHandler) func(http.ResponseWriter, *http.Request) (*Response, error) {
+func WithInjectedDataUtils(dataUtils InjectedDataUtils, f withInjectedDataUtilsHandler) func(http.ResponseWriter, *http.Request) (*Response, error) {
 	return func(w http.ResponseWriter, r *http.Request) (*Response, error) {
 		return f(dataUtils, w, r)
 	}
